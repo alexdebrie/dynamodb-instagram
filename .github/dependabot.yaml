@@ -1,0 +1,9 @@
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: "/"
+      schedule:
+          interval: weekly
+      labels:
+          - "node dependencies"
+      open-pull-requests-limit: 5
