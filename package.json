@@ -45,5 +45,9 @@
         "manual-build": "esbuild src/handler.ts --bundle --outdir=.build",
         "deploy": "sls deploy",
         "destroy": "sls remove"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.932.0",
+        "ulid": "^2.3.0"
     }
 }

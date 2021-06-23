@@ -1,89 +1,90 @@
-[![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com) ![Serverless ESBuild CI](https://github.com/Hebilicious/serverless-esbuild-template/workflows/Serverless%20ESBuild%20CI/badge.svg) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
+# DynamoDB Instagram
 
-# Serverless Esbuild Template
+*This project was built for a DynamoDB demo on [Marcia Villalba's YouTube channel](https://www.youtube.com/channel/UCSLIvjWJwLRQze9Pn4cectQ). For this demo, we saw how + why to use DynamoDB, then displayed some common DynamoDB patterns by building a simple Instagram clone.*
 
-This is a template repository to get you started really quickly with the serverless framework and typescript, using the incredible esbuild.
-It is slighlty opinionated.
+### Table of Contents
 
-## TL:DR => How to use
+- [Usage](#usage)
+- [Terms & Concepts](#terms-and-concepts)
+- [DynamoDB patterns](#dynamodb-patterns)
 
-```bash
-# Make sure you have a modern node environment (example: node 14+, yarn)
-# Make sure you have AWS credentials https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+You may also refer to the following artifacts to understand this project:
 
-# Install dependencies
-yarn
+- [Entity chart](https://docs.google.com/spreadsheets/d/1IWVXyiJ0y4DF6ii-H6vKCF0qQUZr4akI59IaiL1ArIs/edit#gid=0?usp=sharing)
+- [Access patterns chart](https://docs.google.com/spreadsheets/d/1IWVXyiJ0y4DF6ii-H6vKCF0qQUZr4akI59IaiL1ArIs/edit#gid=1488945379?usp=sharing)
 
-# Make sure everything works ™
-yarn test
+## Usage
 
-# Bundle your code and deploy it (This creates the needed AWS resources, Lambda, apiGw, s3...)
-# Deploy will output the URL, refer to serverless documentation to see how everything gets mapped from the serverless.yml
-# Everything is configurable, the default stage is dev, and default region is us-east-1
-yarn deploy
-
-# Example using curl to test your deployed lambda (make sure to use the correct url)
-curl https://00000000.execute-api.us-east-1.amazonaws.com/dev/hello | jq
-
-# Remove service (Removes everything created by sls deploy)
-yarn remove
-```
-
-## Features
-
-### ⚡ serverless + esbuild = ❤
-
--   Built on top of the incredible [esbuild](https://github.com/evanw/esbuild), mad props to [@evanw](https://github.com/evanw)
--   Refer to [serverless-esbuild](https://github.com/floydspace/serverless-esbuild) for the plugin documentation, credits to [@floydspace](https://github.com/floydspace)
--   Includes the amazing [esbuild-register](https://github.com/egoist/esbuild-register), thanks to [@egoist](https://github.com/egoist)
+To deploy this project, run the following commands in your terminal:
 
 ```bash
-node -r esm -r esbuild-register script.ts #Aliased to TS for your convenience
+git clone git@github.com:alexdebrie/dynamodb-instagram.git && cd dynamodb-instagram
+npm i
+sls deploy
 ```
 
-> Enjoy lighting fast build and script execution in typescript
-
-### ⚙ Eslint / Prettier / Typescript / Yarn / dotenv
-
-With sensible defaults because writing boilerplate takes too much time.
-
-> _dotenv is intentionally a dev dependencies, if you want to use it at runtime, move it to dependencies, import it in your code then load your env file._
-
-### 🧪 Tests with Jest, GitHub Actions, Dependabot
-
-An example of an integration test that works with the great `sls offline` and the node-fetch package.
-
-Simply run :
+You should see output indicating the service was deployed and your endpoints are live:
 
 ```bash
-yarn test
+Service Information
+service: dynamodb-instagram
+stage: dev
+region: us-east-1
+stack: dynamodb-instagram-dev
+resources: 69
+api keys:
+  None
+endpoints:
+  POST - https://*********.execute-api.us-east-1.amazonaws.com/dev/users
+  GET - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}
+  POST - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/photos
+  GET - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/photos/{photoId}
+  POST - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/photos/{photoId}/likes
+  GET - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/photos/{photoId}/likes
+  POST - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/photos/{photoId}/comments
+  GET - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/photos/{photoId}/comments
+  POST - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/followers
+  GET - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/followers
+  GET - https://*********.execute-api.us-east-1.amazonaws.com/dev/users/{username}/following
+functions:
+  createUser: dynamodb-instagram-dev-createUser
+  getUser: dynamodb-instagram-dev-getUser
+  createPhoto: dynamodb-instagram-dev-createPhoto
+  ...
 ```
 
-> A Github Action basic pipeline is setup with yarn caching and tests, check .github/workflows/main.yaml
+TODO -- usage script?
 
-### 📴 Serverless-offline dev/start/stop scripts with pm2
+## Terms and Concepts
 
-pm2 is a node process manager, very handy when you're dealing with several local microservices ...
+We are building an Instagram clone where users can post photos. Other users may like a photo or comment on a photo. Finally, a user may choose to 'follow' another user in order to see their recent activity.
 
-```json
-{
-    "offline:dev": "yarn ts scripts/offline.ts dev",
-    "offline:start": "yarn ts scripts/offline.ts start",
-    "offline:stop": "yarn ts scripts/offline.ts stop"
-}
-```
+Each entity is discussed further below. Clicking on the entity link will take you to the code definition for the entity.
 
--   `offline:dev` : Start `sls offline` in the foreground.
--   `offline:start` : Start `sls offline` in the background with pm2, log the output to pm2.log
--   `offline:stop` : Terminate the pm2 process(es) cleanly (based on the name, check offline.ts)
+- A [**User**](./src/data/user.ts) represents a person that has signed up for our application. They will be uniquely identified by a username.
 
-Check offline.ts if you need custom behavior.
+- A [**Photo**](./src/data/photo.ts) represents an image uploaded by a particular User. You can browse all Photos for a particular User in reverse-chronological order. Each Photo can be Liked or Commented on (see below).
 
-### 🌀 Serverless.ts
+- A [**Like**](./src/data/like.ts) represents a specific User 'liking' a specific Photo. A specific Photo may only be liked once by a specific User. When showing a Photo, we will show the total number of Likes for that Photo.
 
-Use a serverless.ts files instead of a serverless.yml file for the configuration.
-You can delete the serverless.ts and rename serverless.example.yml to serverless.yml if you prefer yaml.
-Refer to the [docs](https://www.serverless.com/framework/docs/providers/aws/guide/intro/).
-More info in the [PR](https://github.com/serverless/serverless/pull/7755).
+- A [**Comment**](./src/data/comment.ts) represents a User commenting on a particular Photo. There is no limit to the number of Comments on a Photo by a given User. When showing a Photo, we will show the total number of Comments for that Photo.
 
-> View this repository on GitHub: <https://github.com/Hebilicious/serverless-esbuild-template>
+- A [**Follow**](./src/data/follow.ts) represents one User choosing to follow another User. By following another User, you will receive updates from that User in your timeline (not implemented in this demo). A Follow is a one-way relationship -- a User can follow another User without the second User following in return. For a particular User, we want to show the number of other Users following them and the number of Users they're following, as well as the ability to show the lists of Followers and Followees.
+
+## DynamoDB patterns
+
+Below are a few patterns demonstrated in this repository that can be useful for using DynamoDB in your application:
+
+- [Abstract base class for entities](./src/data/base.ts). It defines common methods that need to be implemented for each entity -- `PK` & `SK` values; `toItem()` method; etc.
+
+- [`getClient()` function to return a DynamoDB client](./src/data/client.ts). This returns a singleton DynamoDB client to enable re-use of the underlying HTTP connection across Lambda invocations. Also, it includes common client parameters like timeouts to ensure proper configuration.
+
+- [Using ULIDs as unique, sortable identifiers](./src/data/photo.ts). A [ULID](https://github.com/ulid/spec) provides the uniqueness of a UUID but is prefixed with the creation-time timestamp. This allows for lexicographic sorting of the IDs based on creation time.
+
+- [ConditionExpressions when creating a User](./src/data/user.ts#51). This ensures uniquness of usernames for all Users.
+
+- [Query operation to fetch all Comments for a Photo](./src/data/comment.ts#87). The Query operation allows us to fetch an array of items when we only know the partition key (the PhotoId). 
+
+- [Using a DynamoDB Transaction to ensure uniquness + track reference counts](./src/data/like.ts#54). When creating a Like, we will add the Like with a ConditionExpression to ensure this User hasn't already liked the given Photo. Additionally, we will increment the `likesCount` attribute on the Photo.
+
+- [Using multiple requests in many-to-many relationships](./src/data/follows.ts#106). When retrieving the followers for a particular User, we make two requests. First, we make a Query operation to find all the Follow records for a particular User. Second, we make a BatchGetItem operation to hydrate all the User entities for each follower.

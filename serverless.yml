@@ -1,0 +1,128 @@
+service: dynamodb-instagram
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:BatchGetItem"
+        - "dynamodb:ConditionCheckItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:Query"
+        - "dynamodb:UpdateItem"
+      Resource:
+        - Fn::GetAtt:
+          - InstagramTable 
+          - Arn
+        - Fn::Join: 
+          - "/"
+          - - Fn::GetAtt:
+              - InstagramTable 
+              - Arn
+            - "index/GSI1"
+  environment:
+    TABLE_NAME: { Ref: InstagramTable }
+
+functions:
+  createUser:
+    handler: src/handlers/createUser.main
+    events:
+      - http:
+          path: /users
+          method: post
+  getUser:
+    handler: src/handlers/getUser.main
+    events:
+      - http:
+          path: /users/{username}
+          method: get
+  createPhoto:
+    handler: src/handlers/createPhoto.main
+    events:
+      - http:
+          path: /users/{username}/photos
+          method: post
+  getPhoto:
+    handler: src/handlers/getPhoto.main
+    events:
+      - http:
+          path: /users/{username}/photos/{photoId}
+          method: get
+  likePhoto:
+    handler: src/handlers/likePhoto.main
+    events:
+      - http:
+          path: /users/{username}/photos/{photoId}/likes
+          method: post
+  listLikesForPhoto:
+    handler: src/handlers/listLikesForPhoto.main
+    events:
+      - http:
+          path: /users/{username}/photos/{photoId}/likes
+          method: get
+  commentOnPhoto:
+    handler: src/handlers/commentOnPhoto.main
+    events:
+      - http:
+          path: /users/{username}/photos/{photoId}/comments
+          method: post
+  listCommentsForPhoto:
+    handler: src/handlers/listCommentsForPhoto.main
+    events:
+      - http:
+          path: /users/{username}/photos/{photoId}/comments
+          method: get
+  followUser:
+    handler: src/handlers/followUser.main
+    events:
+      - http:
+          path: /users/{username}/followers
+          method: post
+  listFollowersOfUser:
+    handler: src/handlers/listFollowersOfUser.main
+    events:
+      - http:
+          path: /users/{username}/followers
+          method: get 
+  listFollowedByUser:
+    handler: src/handlers/listFollowedByUser.main
+    events:
+      - http:
+          path: /users/{username}/following
+          method: get 
+
+resources:
+  Resources:
+    InstagramTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties: 
+        AttributeDefinitions: 
+          - AttributeName: "PK"
+            AttributeType: "S"
+          - AttributeName: "SK"
+            AttributeType: "S"
+          - AttributeName: "GSI1PK"
+            AttributeType: "S"
+          - AttributeName: "GSI1SK"
+            AttributeType: "S"
+        KeySchema: 
+          - AttributeName: "PK"
+            KeyType: "HASH"
+          - AttributeName: "SK"
+            KeyType: "RANGE"
+        BillingMode: "PAY_PER_REQUEST"
+        GlobalSecondaryIndexes:
+          - IndexName: 'GSI1'
+            KeySchema:
+            - AttributeName: "GSI1PK"
+              KeyType: "HASH"
+            - AttributeName: "GSI1SK"
+              KeyType: "RANGE"
+            Projection:
+              ProjectionType: ALL
