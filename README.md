@@ -53,8 +53,6 @@ functions:
   ...
 ```
 
-TODO -- usage script?
-
 ## Terms and Concepts
 
 We are building an Instagram clone where users can post photos. Other users may like a photo or comment on a photo. Finally, a user may choose to 'follow' another user in order to see their recent activity.
