@@ -85,4 +85,4 @@ Below are a few patterns demonstrated in this repository that can be useful for 
 
 - [Using a DynamoDB Transaction to ensure uniquness + track reference counts](./src/data/like.ts#54). When creating a Like, we will add the Like with a ConditionExpression to ensure this User hasn't already liked the given Photo. Additionally, we will increment the `likesCount` attribute on the Photo.
 
-- [Using multiple requests in many-to-many relationships](./src/data/follows.ts#106). When retrieving the followers for a particular User, we make two requests. First, we make a Query operation to find all the Follow records for a particular User. Second, we make a BatchGetItem operation to hydrate all the User entities for each follower.
+- [Using multiple requests in many-to-many relationships](./src/data/follow.ts#106). When retrieving the followers for a particular User, we make two requests. First, we make a Query operation to find all the Follow records for a particular User. Second, we make a BatchGetItem operation to hydrate all the User entities for each follower.
