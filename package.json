@@ -16,7 +16,7 @@
         "eslint-config-prettier": "^6.11.0",
         "eslint-plugin-import": "^2.22.0",
         "eslint-plugin-jest": "^23.20.0",
-        "eslint-plugin-promise": "^4.2.1",
+        "eslint-plugin-promise": "^6.1.1",
         "esm": "^3.2.25",
         "execa": "^4.0.3",
         "jest": "^26.2.2",
